@@ -1,0 +1,205 @@
+server {
+    listen 80;
+    server_name _;
+
+    # Root directory - ASSICURATI CHE SIA CORRETTA
+    root /home/<user>/vicinato-vicino/frontend;
+    index index.html;
+
+    # =========================================================
+    # Limiti per upload (sezione Scambio / Regalo: foto + video)
+    # =========================================================
+    # Il backend applica gia' limiti piu' stringenti per ogni
+    # singolo file (immagini <= 8MB, video <= 12MB). Qui alziamo
+    # il tetto complessivo per permettere fino a 3 allegati per
+    # annuncio.
+    client_max_body_size 40m;
+    client_body_buffer_size 256k;
+    client_body_timeout 60s;
+    client_header_timeout 30s;
+
+    # =========================================================
+    # SECURITY HEADERS
+    # =========================================================
+    # NOTA TECNICA NGINX: `add_header` definito in un blocco `location`
+    # SOVRASCRIVE quelli ereditati dal blocco `server`. Quindi tutti i
+    # security header che vogliamo applicare ovunque vanno RIPETUTI in
+    # ogni `location` (vedi sotto). Per evitare duplicazione si puo'
+    # estrarre in `include /etc/nginx/snippets/security-headers.conf;`.
+    #
+    # CSP attuale e' relativamente permissiva per supportare:
+    #   - `unsafe-inline` per script: alcuni handler onclick=... nell'HTML
+    #   - `unsafe-inline` per style: attributi style="..." inline
+    #   - cdnjs.cloudflare.com per font-awesome
+    #   - fonts.googleapis.com + fonts.gstatic.com per Google Fonts
+    # Per hardening produzione: rimuovere 'unsafe-inline', spostare gli
+    # handler inline JS in addEventListener, e gli style inline in CSS.
+
+    # CORS NOTE:
+    # 'Access-Control-Allow-Origin: *' funziona perche' il frontend e il
+    # backend sono sulla stessa origine (nginx fa proxy). Per deploy multi-
+    # dominio (es. mobile app), sostituire * con il dominio specifico
+    # delle origini che chiamano l'API.
+
+    # Disabilita access logging per file statici (opzionale)
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+
+    location = /robots.txt {
+        log_not_found off;
+        access_log off;
+        # robots.txt vuoto = nessuna disallow, ma evita 404
+        return 200 "User-agent: *\nDisallow:\n";
+        add_header Content-Type "text/plain" always;
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+
+    # Servi file statici (frontend SPA: fallback a index.html)
+    location / {
+        try_files $uri $uri/ /index.html;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'" always;
+
+        # CORS per il frontend stesso
+        add_header Access-Control-Allow-Origin "*" always;
+    }
+
+    # Cache per file statici (frontend). NON deve catturare le foto/video
+    # caricati dagli utenti che stanno sotto /uploads/ -> gestite a parte
+    # con `location ^~ /uploads/` piu' sotto, che ha priorita' sui regex.
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+
+    # Proxy per le API - IMPORTANTE: senza trailing slash se backend non ha /api prefix
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/;  # NOTA: con trailing slash
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Upload di foto/video tramite /api/items/: lascia respiro al Pi
+        proxy_request_buffering off;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 120s;
+
+        # Security headers anche sulle risposte API (importante per JSON che
+        # contiene token o dati sensibili: niente sniffing del content-type).
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        # CORS headers per API
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, PATCH, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range' always;
+
+        # Handle preflight
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+    }
+
+    # Servire direttamente i file caricati (immagini/video allegati agli
+    # annunci di scambio/regalo). IMPORTANTE: usiamo `^~` cosi' questo
+    # prefisso vince sui regex (in particolare sul cache statico per .jpg
+    # ecc. piu' sopra, altrimenti nginx servirebbe le foto degli annunci
+    # dalla root frontend dando 404).
+    # Caching aggressivo: i file hanno nome UUID e sono immutabili.
+    location ^~ /uploads/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+
+        # Security headers anche sui media uploadati: nosniff impedisce al
+        # browser di interpretare come HTML un file caricato come jpg.
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header 'Access-Control-Allow-Origin' '*' always;
+    }
+
+    # Proxy diretto per endpoint API FastAPI (inclusi /chat, /items e /uploads)
+    location ~ ^/(users|jobs|items|events|chat|health|test-db|docs|redoc|openapi.json|admin|moderation|reports|site|reviews) {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Upload di foto/video su /items/: niente buffering del body e
+        # timeout piu' generosi per dar tempo a Pillow di comprimere.
+        proxy_request_buffering off;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 120s;
+
+        # Security headers anche su queste risposte JSON dirette
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        # CORS (in pratica qui servono poco, perche' frontend e API sono
+        # stessa origin, ma non danno fastidio)
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, PATCH, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
+    }
+}
+
+# =====================================================================
+# PRODUCTION HARDENING (da fare quando il sito ha un dominio reale)
+# =====================================================================
+#
+# 1) HTTPS con Let's Encrypt (gratis, certbot):
+#       sudo apt install certbot python3-certbot-nginx
+#       sudo certbot --nginx -d miosito.example.com
+#    Certbot aggiunge automaticamente:
+#       listen 443 ssl http2;
+#       ssl_certificate /etc/letsencrypt/live/<dominio>/fullchain.pem;
+#       ssl_certificate_key /etc/letsencrypt/live/<dominio>/privkey.pem;
+#    e crea il rinnovo automatico via systemd timer.
+#
+# 2) Una volta su HTTPS, aggiungere a tutti i `location`:
+#       add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+#
+# 3) Redirect HTTP -> HTTPS (server block separato sulla porta 80):
+#       return 301 https://$host$request_uri;
+#
+# 4) CORS: sostituire `Access-Control-Allow-Origin: *` con l'origine
+#    specifica del proprio frontend (es. https://miosito.example.com).
+#
+# 5) Rimuovere `server_tokens`:
+#       server_tokens off;   # nasconde la versione nginx nelle 4xx/5xx
+#    da mettere nel blocco http { ... } in /etc/nginx/nginx.conf

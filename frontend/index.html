@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VicinatoVicino - Il mio quartiere</title>
+    <link rel="stylesheet" href="css/style.css?v=5">
+    <!-- Preconnect a CDN per ridurre TTFB su font/icone -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- SRI: blocca contenuto manomesso dalla CDN. L'hash e' per font-awesome 6.4.0. -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer">
+    <!-- Google Fonts non supporta SRI (il CSS e' generato dinamicamente in base allo user-agent) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap"
+          rel="stylesheet"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>
+                    <img id="site-logo-img" src="" alt="" style="display:none; height:1.4em; vertical-align:middle; margin-right:0.4em;">
+                    <i id="site-logo-icon" class="fas fa-hands-helping"></i>
+                    <span id="site-name">VicinatoVicino</span>
+                </h1>
+                <p class="subtitle" id="site-description">Il mio quartiere</p>
+            </div>
+            <nav class="nav">
+                <a href="#" class="nav-link active" data-page="home">Home</a>
+                <a href="#" class="nav-link" data-page="jobs">Lavoretti</a>
+                <a href="#" class="nav-link" data-page="items">Scambio/Regalo</a>
+                <a href="#" class="nav-link" data-page="events">Eventi</a>
+                <a href="#" class="nav-link" data-page="register">Registrati</a>
+                <a href="#" class="nav-link" data-page="login">Login</a>
+                <a href="#" class="nav-link" data-page="profile" style="display:none;">Profilo</a>
+                <a href="#" class="nav-link" data-page="users" style="display:none;">Utenti</a>
+                <a href="#" class="nav-link" data-page="admin" id="nav-admin" style="display:none;"><i class="fas fa-shield-alt"></i> Admin</a>
+                <button id="chat-toggle-btn" class="btn btn-outline" style="display:none;">
+                    <i class="fas fa-comments"></i> Chat
+                    <span id="chat-unread-badge" class="chat-unread-badge" style="display: none;">0</span>
+                </button>
+                <button id="logout-btn" class="btn btn-outline" style="display:none;">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <!-- Home Page -->
+        <section id="home-page" class="page active">
+            <div class="hero">
+                <h2>Benvenuto in VicinatoVicino</h2>
+                <p class="hero-text">La piattaforma per connettere i vicini di casa</p>
+                <div class="features">
+                    <button type="button" class="feature feature-link" data-feature-page="jobs">
+                        <i class="fas fa-tools"></i>
+                        <h3>Lavoretti e Aiuti</h3>
+                        <p>Cerchi o offri aiuto per piccoli lavori</p>
+                    </button>
+                    <button type="button" class="feature feature-link" data-feature-page="items">
+                        <i class="fas fa-gift"></i>
+                        <h3>Regalo e Scambio</h3>
+                        <p>Dai una seconda vita agli oggetti</p>
+                    </button>
+                    <button type="button" class="feature feature-link" data-feature-page="events">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>Eventi di Quartiere</h3>
+                        <p>Partecipa alle iniziative locali</p>
+                    </button>
+                </div>
+
+                <!-- Eventi di oggi: visibile solo se ci sono -->
+                <div class="home-today-events" id="home-today-events" style="display:none;">
+                    <h3><i class="fas fa-calendar-day"></i> Eventi di oggi</h3>
+                    <div id="home-today-events-list" class="home-today-events-list"></div>
+                </div>
+            </div>
+            
+        </section>
+
+        <!-- Jobs Page -->
+        <section id="jobs-page" class="page">
+            <div class="jobs-container">
+                <h2><i class="fas fa-tools"></i> Lavoretti e Aiuti</h2>
+
+                <!-- Barra ricerca e filtri -->
+                <div class="jobs-controls">
+                    <div class="search-box">
+                        <input type="text" id="jobs-search" placeholder="Cerca per titolo, descrizione o competenze...">
+                        <button id="jobs-search-btn" class="btn btn-secondary">
+                            <i class="fas fa-search"></i> Cerca
+                        </button>
+                    </div>
+                    <div class="jobs-filters">
+                        <select id="jobs-filter-category">
+                            <option value="">Tutte le categorie</option>
+                            <option value="giardinaggio">Giardinaggio</option>
+                            <option value="idraulica">Idraulica</option>
+                            <option value="elettricista">Elettricista</option>
+                            <option value="traslochi">Traslochi</option>
+                            <option value="pulizie">Pulizie</option>
+                            <option value="babysitting">Babysitting</option>
+                            <option value="anziani">Anziani</option>
+                            <option value="ripetizioni">Ripetizioni</option>
+                            <option value="altro">Altro</option>
+                        </select>
+                        <select id="jobs-filter-type">
+                            <option value="">Tutti (offerte e richieste)</option>
+                            <option value="offer">Solo offerte</option>
+                            <option value="request">Solo richieste</option>
+                        </select>
+                        <select id="jobs-filter-zone">
+                            <option value="">Tutte le zone</option>
+                            <option value="Nord">Nord</option>
+                            <option value="Sud">Sud</option>
+                            <option value="Centro">Centro</option>
+                            <option value="Est">Est</option>
+                            <option value="Ovest">Ovest</option>
+                        </select>
+                        <button id="jobs-reset-filters" class="btn btn-outline btn-small">Resetta filtri</button>
+                    </div>
+                </div>
+
+                <div class="jobs-layout">
+                    <!-- Pulsante per mostrare form (solo se loggato) -->
+                    <div class="jobs-form-toggle-wrapper" id="jobs-form-toggle-wrapper" style="display: none;">
+                        <button type="button" id="jobs-toggle-form-btn" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Richiedi o Offri un lavoretto
+                        </button>
+                    </div>
+
+                    <!-- Form nuovo lavoretto (nascosto di default) -->
+                    <div class="jobs-form-wrapper" id="jobs-form-wrapper" style="display: none;">
+                        <h3>Crea un annuncio</h3>
+                        <form id="jobs-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tipo annuncio *</label>
+                                    <div class="radio-group">
+                                        <label><input type="radio" name="job-type" value="offer" checked> Offro aiuto / servizio</label>
+                                        <label><input type="radio" name="job-type" value="request"> Cerco aiuto / lavoro</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="job-category">Categoria *</label>
+                                    <select id="job-category" required>
+                                        <option value="">Seleziona...</option>
+                                        <option value="giardinaggio">Giardinaggio</option>
+                                        <option value="idraulica">Idraulica</option>
+                                        <option value="elettricista">Elettricista</option>
+                                        <option value="traslochi">Traslochi / piccoli trasporti</option>
+                                        <option value="pulizie">Pulizie</option>
+                                        <option value="babysitting">Babysitting</option>
+                                        <option value="anziani">Compagnia / aiuto anziani</option>
+                                        <option value="ripetizioni">Ripetizioni / aiuto compiti</option>
+                                        <option value="altro">Altro</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="job-title">Titolo *</label>
+                                <input type="text" id="job-title" required placeholder="Es. Cerco aiuto per montare un mobile">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="job-description">Descrizione *</label>
+                                <textarea id="job-description" rows="3" required placeholder="Spiega in modo chiaro cosa serve o cosa offri..."></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="job-price-type">Compenso *</label>
+                                    <select id="job-price-type">
+                                        <option value="gratis">Volontariato / gratis</option>
+                                        <option value="fisso">Prezzo fisso</option>
+                                        <option value="orario">Compenso orario</option>
+                                        <option value="scambio">Scambio / baratto</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="job-price-amount">Importo (facoltativo)</label>
+                                    <input type="number" id="job-price-amount" min="0" step="1" placeholder="Es. 20">
+                                </div>
+                                <div class="form-group">
+                                    <label for="job-price-note">Dettagli compenso</label>
+                                    <input type="text" id="job-price-note" placeholder="Es. trattabile, rimborso spese...">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                            <label for="job-zone">Zona *</label>
+                            <select id="job-zone">
+                                <option value="">Seleziona zona</option>
+                                <option value="Nord">Nord</option>
+                                <option value="Sud">Sud</option>
+                                <option value="Centro">Centro</option>
+                                <option value="Est">Est</option>
+                                <option value="Ovest">Ovest</option>
+                            </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="job-location-details">Luogo preciso (facoltativo)</label>
+                                    <input type="text" id="job-location-details" placeholder="Via, condominio o punto di riferimento">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Modalità</label>
+                                    <div class="checkbox-group">
+                                        <label><input type="checkbox" id="job-is-remote"> Si può fare da remoto</label>
+                                        <label><input type="checkbox" id="job-at-client-home"> Si svolge a casa del richiedente</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="job-time-type">Tipo di impegno</label>
+                                    <select id="job-time-type">
+                                        <option value="una_tantum">Una tantum</option>
+                                        <option value="ricorrente">Ricorrente</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="job-estimated-hours">Durata stimata (ore)</label>
+                                    <input type="number" id="job-estimated-hours" min="0" step="0.5">
+                                </div>
+                                <div class="form-group">
+                                    <label for="job-urgency">Urgenza</label>
+                                    <select id="job-urgency">
+                                        <option value="normale">Normale</option>
+                                        <option value="urgente">Urgente</option>
+                                        <option value="quando_si_puo">Quando si può</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Giorni preferiti (facoltativo)</label>
+                                <div class="checkbox-group small">
+                                    <label><input type="checkbox" name="job-days" value="lun"> Lun</label>
+                                    <label><input type="checkbox" name="job-days" value="mar"> Mar</label>
+                                    <label><input type="checkbox" name="job-days" value="mer"> Mer</label>
+                                    <label><input type="checkbox" name="job-days" value="gio"> Gio</label>
+                                    <label><input type="checkbox" name="job-days" value="ven"> Ven</label>
+                                    <label><input type="checkbox" name="job-days" value="sab"> Sab</label>
+                                    <label><input type="checkbox" name="job-days" value="dom"> Dom</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Fasce orarie preferite (facoltativo)</label>
+                                <div class="checkbox-group small">
+                                    <label><input type="checkbox" name="job-times" value="mattina"> Mattina</label>
+                                    <label><input type="checkbox" name="job-times" value="pomeriggio"> Pomeriggio</label>
+                                    <label><input type="checkbox" name="job-times" value="sera"> Sera</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="job-required-skills">Competenze richieste (facoltativo)</label>
+                                <input type="text" id="job-required-skills" placeholder="es. uso trapano, esperienza con bambini...">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="job-media">Foto luogo/oggetto (facoltative, max 3)</label>
+                                <input type="file" id="job-media" accept="image/*,video/*" multiple>
+                                <small class="hint-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Massimo 3 file. Le immagini vengono compresse in automatico.
+                                    Limiti: immagini fino a 8 MB, video fino a 12 MB.
+                                </small>
+                                <div id="jobs-media-error" class="result-message error" style="display:none; margin-top:0.5rem;"></div>
+                                <div id="jobs-edit-media-note" class="hint-text" style="display:none; margin-top:0.5rem;"></div>
+                                <div id="jobs-media-preview" class="item-media-grid" style="margin-top:0.75rem;"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="job-notes">Note aggiuntive (facoltative)</label>
+                                <textarea id="job-notes" rows="2"></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus-circle"></i> Pubblica annuncio
+                                </button>
+                                <button type="button" id="jobs-close-form-btn" class="btn btn-outline">
+                                    <i class="fas fa-times"></i> Chiudi
+                                </button>
+                            </div>
+                        </form>
+                        <div id="jobs-result" class="result-message"></div>
+                    </div>
+
+                    <!-- Lista lavoretti -->
+                    <div class="jobs-list-wrapper">
+                        <div class="jobs-list-header">
+                            <h3>Annunci nel quartiere</h3>
+                            <button id="jobs-refresh" class="btn btn-outline btn-small">
+                                <i class="fas fa-sync-alt"></i> Aggiorna
+                            </button>
+                        </div>
+                        <div id="jobs-list" class="jobs-list">
+                            <div class="loading">Caricamento lavoretti...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Items Page -->
+        <section id="items-page" class="page">
+            <div class="jobs-container">
+                <h2><i class="fas fa-gift"></i> Scambio / Regalo</h2>
+
+                <div class="jobs-controls">
+                    <div class="search-box">
+                        <input type="text" id="items-search" placeholder="Cerca per titolo, descrizione o categoria...">
+                        <button id="items-search-btn" class="btn btn-secondary">
+                            <i class="fas fa-search"></i> Cerca
+                        </button>
+                    </div>
+                    <div class="jobs-filters">
+                        <select id="items-filter-type">
+                            <option value="">Tutti (regalo e scambio)</option>
+                            <option value="regalo">Solo regalo</option>
+                            <option value="scambio">Solo scambio</option>
+                        </select>
+                        <select id="items-filter-status">
+                            <option value="">Tutti gli stati</option>
+                            <option value="available">Disponibili</option>
+                            <option value="reserved">Riservati</option>
+                            <option value="taken">Ceduti</option>
+                        </select>
+                        <select id="items-filter-zone">
+                            <option value="">Tutte le zone</option>
+                            <option value="Nord">Nord</option>
+                            <option value="Sud">Sud</option>
+                            <option value="Centro">Centro</option>
+                            <option value="Est">Est</option>
+                            <option value="Ovest">Ovest</option>
+                        </select>
+                        <button id="items-reset-filters" class="btn btn-outline btn-small">Resetta filtri</button>
+                    </div>
+                </div>
+
+                <div class="jobs-layout">
+                    <!-- Pulsante per mostrare form (solo se loggato) -->
+                    <div class="jobs-form-toggle-wrapper" id="items-form-toggle-wrapper" style="display: none;">
+                        <button type="button" id="items-toggle-form-btn" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Pubblica oggetto in regalo / scambio
+                        </button>
+                    </div>
+
+                    <!-- Form nuovo oggetto (nascosto di default) -->
+                    <div class="jobs-form-wrapper" id="items-form-wrapper" style="display: none;">
+                        <h3>Nuovo annuncio Scambio/Regalo</h3>
+                        <form id="items-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="item-type">Tipo annuncio *</label>
+                                    <select id="item-type" required>
+                                        <option value="regalo">Regalo</option>
+                                        <option value="scambio">Scambio</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-category">Categoria *</label>
+                                    <input type="text" id="item-category" required placeholder="Es. libri, mobili, elettronica...">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="item-title">Titolo *</label>
+                                <input type="text" id="item-title" required placeholder="Es. Regalo scrivania in legno">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="item-description">Descrizione *</label>
+                                <textarea id="item-description" rows="3" required placeholder="Descrivi bene l'oggetto..."></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="item-condition">Stato oggetto</label>
+                                    <select id="item-condition">
+                                        <option value="nuovo">Nuovo</option>
+                                        <option value="usato" selected>Usato</option>
+                                        <option value="da_riparare">Da riparare</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="item-zone">Zona</label>
+                                    <select id="item-zone">
+                                        <option value="">Seleziona zona</option>
+                                        <option value="Nord">Nord</option>
+                                        <option value="Sud">Sud</option>
+                                        <option value="Centro">Centro</option>
+                                        <option value="Est">Est</option>
+                                        <option value="Ovest">Ovest</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="item-media">Allegati (immagini/video, max 3)</label>
+                                <input type="file" id="item-media" accept="image/*,video/*" multiple>
+                                <small class="hint-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Massimo 3 file per annuncio. Le immagini vengono compresse in automatico.
+                                    Limiti: immagini fino a 8 MB, video fino a 12 MB (consigliato &lt; 10 sec, 480p).
+                                </small>
+                                <div id="items-media-error" class="result-message error" style="display:none; margin-top:0.5rem;"></div>
+                                <div id="items-edit-media-note" class="hint-text" style="display:none; margin-top:0.5rem;"></div>
+                                <div id="items-media-preview" class="item-media-grid" style="margin-top:0.75rem;"></div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus-circle"></i> Pubblica annuncio
+                                </button>
+                                <button type="button" id="items-close-form-btn" class="btn btn-outline">
+                                    <i class="fas fa-times"></i> Chiudi
+                                </button>
+                            </div>
+                        </form>
+                        <div id="items-result" class="result-message"></div>
+                    </div>
+
+                    <!-- Lista oggetti -->
+                    <div class="jobs-list-wrapper">
+                        <div class="jobs-list-header">
+                            <h3>Oggetti pubblicati</h3>
+                            <button id="items-refresh" class="btn btn-outline btn-small">
+                                <i class="fas fa-sync-alt"></i> Aggiorna
+                            </button>
+                        </div>
+                        <div id="items-list" class="jobs-list">
+                            <div class="loading">Caricamento annunci...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Events Page -->
+        <section id="events-page" class="page">
+            <div class="jobs-container">
+                <h2><i class="fas fa-calendar-alt"></i> Eventi di Quartiere</h2>
+
+                <div class="jobs-controls">
+                    <div class="events-calendar-nav">
+                        <button id="events-prev-month" class="btn btn-outline btn-small" type="button" aria-label="Mese precedente">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <h3 id="events-current-month" class="events-month-label"></h3>
+                        <button id="events-next-month" class="btn btn-outline btn-small" type="button" aria-label="Mese successivo">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button id="events-today" class="btn btn-outline btn-small" type="button">Oggi</button>
+                    </div>
+                    <div class="jobs-filters">
+                        <select id="events-filter-category">
+                            <option value="">Tutte le categorie</option>
+                            <option value="festa">Festa</option>
+                            <option value="mercatino">Mercatino</option>
+                            <option value="corso">Corso</option>
+                            <option value="pulizia">Pulizia / cura quartiere</option>
+                            <option value="sport">Sport</option>
+                            <option value="cultura">Cultura</option>
+                            <option value="altro">Altro</option>
+                        </select>
+                        <select id="events-filter-zone">
+                            <option value="">Tutte le zone</option>
+                            <option value="Nord">Nord</option>
+                            <option value="Sud">Sud</option>
+                            <option value="Centro">Centro</option>
+                            <option value="Est">Est</option>
+                            <option value="Ovest">Ovest</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="jobs-layout">
+                    <!-- Pulsante crea evento (solo se loggato) -->
+                    <div class="jobs-form-toggle-wrapper" id="events-form-toggle-wrapper" style="display: none;">
+                        <button type="button" id="events-toggle-form-btn" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Organizza un evento
+                        </button>
+                    </div>
+
+                    <!-- Form nuovo evento -->
+                    <div class="jobs-form-wrapper" id="events-form-wrapper" style="display: none;">
+                        <h3 id="events-form-title">Nuovo evento</h3>
+                        <form id="events-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="event-title">Titolo *</label>
+                                    <input type="text" id="event-title" required placeholder="Es. Festa di primavera in piazza">
+                                </div>
+                                <div class="form-group">
+                                    <label for="event-category">Categoria *</label>
+                                    <select id="event-category" required>
+                                        <option value="festa">Festa</option>
+                                        <option value="mercatino">Mercatino</option>
+                                        <option value="corso">Corso</option>
+                                        <option value="pulizia">Pulizia / cura quartiere</option>
+                                        <option value="sport">Sport</option>
+                                        <option value="cultura">Cultura</option>
+                                        <option value="altro" selected>Altro</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="event-description">Descrizione *</label>
+                                <textarea id="event-description" rows="3" required placeholder="Cosa, per chi, perche'..."></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="event-date">Inizio *</label>
+                                    <input type="datetime-local" id="event-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="event-end-date">Fine (facoltativa)</label>
+                                    <input type="datetime-local" id="event-end-date">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="event-location">Luogo *</label>
+                                <input type="text" id="event-location" required placeholder="Es. Parco comunale - ingresso principale">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="event-max">Posti totali (facoltativo)</label>
+                                    <input type="number" id="event-max" min="1" step="1" placeholder="Lascia vuoto = nessun limite">
+                                </div>
+                                <div class="form-group">
+                                    <label for="event-cover">Locandina (foto, facoltativa)</label>
+                                    <input type="file" id="event-cover" accept="image/*">
+                                    <small class="hint-text">
+                                        <i class="fas fa-info-circle"></i>
+                                        Una sola immagine. Verra' compressa automaticamente.
+                                    </small>
+                                    <div id="event-cover-error" class="result-message error" style="display:none; margin-top:0.5rem;"></div>
+                                    <div id="event-cover-preview" class="item-media-grid" style="margin-top:0.75rem;"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus-circle"></i> Pubblica evento
+                                </button>
+                                <button type="button" id="events-close-form-btn" class="btn btn-outline">
+                                    <i class="fas fa-times"></i> Chiudi
+                                </button>
+                            </div>
+                        </form>
+                        <div id="events-result" class="result-message"></div>
+                    </div>
+
+                    <!-- Calendario mensile -->
+                    <div class="events-calendar-wrapper">
+                        <div class="events-calendar-grid" id="events-calendar-grid"></div>
+                    </div>
+
+                    <!-- Lista eventi del mese / del giorno selezionato -->
+                    <div class="jobs-list-wrapper">
+                        <div class="jobs-list-header">
+                            <h3 id="events-list-title">Prossimi eventi</h3>
+                            <button id="events-refresh" class="btn btn-outline btn-small">
+                                <i class="fas fa-sync-alt"></i> Aggiorna
+                            </button>
+                        </div>
+                        <div id="events-list" class="jobs-list">
+                            <div class="loading">Caricamento eventi...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Interface (Modal/Overlay) -->
+        <div id="chat-overlay" class="chat-overlay" style="display: none;">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <h3 id="chat-title">Chat</h3>
+                        <span id="chat-subtitle" class="chat-subtitle"></span>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button id="chat-minimize-btn" class="btn btn-outline btn-small" aria-label="Riduci chat">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button id="chat-close-btn" class="btn btn-outline btn-small" aria-label="Chiudi chat">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chat-messages-container">
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="chat-loading">Caricamento messaggi...</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <form id="chat-form" class="chat-form">
+                        <div class="chat-input-wrapper">
+                            <textarea 
+                                id="chat-input" 
+                                class="chat-input" 
+                                placeholder="Scrivi un messaggio..." 
+                                rows="1"
+                                maxlength="1000"
+                            ></textarea>
+                            <button type="submit" id="chat-send-btn" class="btn btn-primary chat-send-btn" aria-label="Invia messaggio" disabled>
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="chat-typing-indicator" id="typing-indicator" style="display: none;">
+                        <span class="typing-dots">
+                            <span></span><span></span><span></span>
+                        </span>
+                        <span class="typing-text">Qualcuno sta scrivendo...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat List (Sidebar) -->
+        <div id="chat-list-sidebar" class="chat-list-sidebar" style="display: none;">
+            <div class="chat-list-header">
+                <h3><i class="fas fa-comments"></i> Le tue chat</h3>
+                <button id="chat-list-close-btn" class="btn btn-outline btn-small" aria-label="Chiudi lista chat">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="chat-list" class="chat-list">
+                <div class="chat-loading">Caricamento chat...</div>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <section id="register-page" class="page">
+            <div class="form-container">
+                <h2><i class="fas fa-user-plus"></i> Registrazione</h2>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="reg-email">Email *</label>
+                        <input type="email" id="reg-email" required placeholder="mario.rossi@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-username">Username *</label>
+                        <input type="text" id="reg-username" required placeholder="mariorossi">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-fullname">Nome e Cognome *</label>
+                        <input type="text" id="reg-fullname" required placeholder="Mario Rossi">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-password">Password * (min 8 caratteri, con maiuscola, minuscola e numero)</label>
+                            <input type="password" id="reg-password" required minlength="8">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reg-confirm-password">Conferma Password *</label>
+                            <input type="password" id="reg-confirm-password" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-phone">Telefono *</label>
+                            <input type="tel" id="reg-phone" required placeholder="+39 1234567890">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reg-age">Età *</label>
+                            <input type="number" id="reg-age" required min="18" max="120" placeholder="30">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-zone">Zona del quartiere *</label>
+                        <select id="reg-zone" required>
+                            <option value="">Seleziona zona</option>
+                            <option value="Nord">Nord</option>
+                            <option value="Sud">Sud</option>
+                            <option value="Centro">Centro</option>
+                            <option value="Est">Est</option>
+                            <option value="Ovest">Ovest</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-skills">Competenze (separate da virgola)</label>
+                        <input type="text" id="reg-skills" placeholder="giardinaggio, idraulica, babysitting">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-bio">Breve descrizione</label>
+                        <textarea id="reg-bio" rows="3" placeholder="Mi piace aiutare il prossimo..."></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Registrati
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="go-to-login">
+                            <i class="fas fa-sign-in-alt"></i> Hai già un account? Login
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="register-result" class="result-message"></div>
+            </div>
+        </section>
+
+        <!-- Login Page -->
+        <section id="login-page" class="page">
+            <div class="form-container">
+                <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Email o Username *</label>
+                        <input type="text" id="login-username" required placeholder="mario.rossi@example.com o mariorossi">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="login-password">Password *</label>
+                        <input type="password" id="login-password" required>
+                        <div class="password-toggle">
+                            <input type="checkbox" id="show-password"> <label for="show-password">Mostra password</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Accedi
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="go-to-register">
+                            <i class="fas fa-user-plus"></i> Non hai un account? Registrati
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="login-result" class="result-message"></div>
+            </div>
+        </section>
+
+        <!-- Profile Page -->
+        <section id="profile-page" class="page">
+            <div class="profile-container">
+                <h2><i class="fas fa-user-circle"></i> Il tuo Profilo</h2>
+                <div id="profile-info" class="profile-info">
+                    <div class="loading">Caricamento profilo...</div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button id="refresh-profile" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt"></i> Aggiorna
+                    </button>
+                    <button id="toggle-edit-profile" class="btn btn-primary">
+                        <i class="fas fa-user-edit"></i> Modifica profilo
+                    </button>
+                    <button id="toggle-change-password" class="btn btn-secondary">
+                        <i class="fas fa-key"></i> Cambia password
+                    </button>
+                    <button id="toggle-delete-account" class="btn btn-outline danger-btn">
+                        <i class="fas fa-trash-alt"></i> Elimina account
+                    </button>
+                </div>
+
+                <!-- Modifica profilo -->
+                <div class="profile-edit-section" id="profile-edit-section" style="display: none;">
+                    <h3><i class="fas fa-user-edit"></i> Modifica le tue informazioni</h3>
+                    <form id="profile-edit-form">
+                        <div class="form-group">
+                            <label for="profile-fullname">Nome e Cognome</label>
+                            <input type="text" id="profile-fullname" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="profile-phone">Telefono</label>
+                                <input type="tel" id="profile-phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-age">Età</label>
+                                <input type="number" id="profile-age" min="18" max="120" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-zone">Zona</label>
+                            <select id="profile-zone" required>
+                                <option value="">Seleziona zona</option>
+                                <option value="Nord">Nord</option>
+                                <option value="Sud">Sud</option>
+                                <option value="Centro">Centro</option>
+                                <option value="Est">Est</option>
+                                <option value="Ovest">Ovest</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-skills">Competenze (separate da virgola)</label>
+                            <input type="text" id="profile-skills">
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-bio">Breve descrizione</label>
+                            <textarea id="profile-bio" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salva modifiche
+                            </button>
+                        </div>
+                    </form>
+                    <div id="profile-edit-result" class="result-message"></div>
+                </div>
+
+                <!-- Cambio password -->
+                <div class="profile-edit-section" id="profile-password-section" style="display: none;">
+                    <h3><i class="fas fa-key"></i> Cambia password</h3>
+                    <form id="profile-password-form">
+                        <div class="form-group">
+                            <label for="current-password">Password attuale</label>
+                            <input type="password" id="current-password" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="new-password">Nuova password</label>
+                                <input type="password" id="new-password" required minlength="8">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm-new-password">Conferma nuova password</label>
+                                <input type="password" id="confirm-new-password" required minlength="8">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-secondary">
+                                <i class="fas fa-key"></i> Aggiorna password
+                            </button>
+                        </div>
+                    </form>
+                    <div id="profile-password-result" class="result-message"></div>
+                </div>
+
+                <!-- Eliminazione account -->
+                <div class="profile-edit-section danger-section" id="profile-delete-section" style="display: none;">
+                    <h3><i class="fas fa-user-slash"></i> Elimina il tuo account</h3>
+                    <p class="hint-text">
+                        Questa operazione è definitiva e cancellerà anche tutti i tuoi annunci di lavoretti.
+                    </p>
+                    <div class="form-actions">
+                        <button type="button" id="delete-account-btn" class="btn btn-outline">
+                            <i class="fas fa-trash-alt"></i> Elimina definitivamente il mio account
+                        </button>
+                        <button type="button" id="cancel-delete-account" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annulla
+                        </button>
+                    </div>
+                    <div id="profile-delete-result" class="result-message"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Users Page -->
+        <section id="users-page" class="page">
+            <div class="users-container">
+                <h2><i class="fas fa-users"></i> Utenti Registrati</h2>
+                
+                <div class="users-controls">
+                    <div class="search-box">
+                        <input type="text" id="user-search" placeholder="Cerca per nome, email o competenze...">
+                        <button id="search-btn" class="btn btn-secondary">
+                            <i class="fas fa-search"></i> Cerca
+                        </button>
+                    </div>
+                    <button id="refresh-users" class="btn btn-outline">
+                        <i class="fas fa-sync-alt"></i> Aggiorna
+                    </button>
+                </div>
+                
+                <div id="users-list" class="users-list">
+                    <div class="loading">Caricamento utenti...</div>
+                </div>
+                
+                <div class="users-stats" id="users-stats">
+                    <!-- Le statistiche appariranno qui -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Page -->
+        <section id="admin-page" class="page">
+            <div class="admin-container">
+                <h2><i class="fas fa-shield-alt"></i> Pannello di Amministrazione</h2>
+
+                <div class="admin-tabs">
+                    <button class="admin-tab-btn active" data-admin-tab="overview">
+                        <i class="fas fa-chart-line"></i> Panoramica
+                    </button>
+                    <button class="admin-tab-btn" data-admin-tab="settings">
+                        <i class="fas fa-cog"></i> Impostazioni sito
+                    </button>
+                    <button class="admin-tab-btn" data-admin-tab="reports">
+                        <i class="fas fa-flag"></i> Segnalazioni
+                    </button>
+                    <button class="admin-tab-btn" data-admin-tab="users">
+                        <i class="fas fa-users-cog"></i> Utenti & Ruoli
+                    </button>
+                    <button class="admin-tab-btn" data-admin-tab="content">
+                        <i class="fas fa-folder-open"></i> Contenuti
+                    </button>
+                    <button class="admin-tab-btn" data-admin-tab="audit">
+                        <i class="fas fa-history"></i> Audit log
+                    </button>
+                </div>
+
+                <!-- Overview -->
+                <div class="admin-tab-pane active" id="admin-tab-overview">
+                    <div class="admin-stats-grid" id="admin-stats">
+                        <div class="loading">Caricamento...</div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="admin-tab-pane" id="admin-tab-settings">
+                    <div class="admin-section-header">
+                        <h3>Identita' del sito</h3>
+                        <p class="hint-text">Questi dati sono visibili pubblicamente nell'header e nei meta del sito.</p>
+                    </div>
+                    <form id="admin-site-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="setting-site_name">Nome sito</label>
+                                <input type="text" id="setting-site_name">
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-site_description">Descrizione (sottotitolo)</label>
+                                <input type="text" id="setting-site_description" placeholder="Es. Il mio quartiere">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="setting-welcome_message">Messaggio di benvenuto (home)</label>
+                            <textarea id="setting-welcome_message" rows="2"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="setting-logo_url">URL logo</label>
+                                <input type="text" id="setting-logo_url" placeholder="/uploads/logo.png oppure https://...">
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-favicon_url">URL favicon</label>
+                                <input type="text" id="setting-favicon_url">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="setting-primary_color">Colore primario</label>
+                                <input type="color" id="setting-primary_color" value="#2c7a4d">
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-contact_email">Email di contatto</label>
+                                <input type="email" id="setting-contact_email">
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-locale">Locale</label>
+                                <input type="text" id="setting-locale" placeholder="it">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salva impostazioni
+                            </button>
+                        </div>
+                    </form>
+                    <div id="admin-site-result" class="result-message"></div>
+
+                    <div class="admin-section-header" style="margin-top:2rem;">
+                        <h3>Liste configurabili</h3>
+                        <p class="hint-text">Una voce per riga. Usate nei filtri e nei form di tutto il sito.</p>
+                    </div>
+                    <form id="admin-lists-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="setting-zones">Zone del quartiere</label>
+                                <textarea id="setting-zones" rows="6"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-job_categories">Categorie lavoretti</label>
+                                <textarea id="setting-job_categories" rows="6"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="setting-event_categories">Categorie eventi</label>
+                                <textarea id="setting-event_categories" rows="6"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salva liste
+                            </button>
+                        </div>
+                    </form>
+                    <div id="admin-lists-result" class="result-message"></div>
+                </div>
+
+                <!-- Reports -->
+                <div class="admin-tab-pane" id="admin-tab-reports">
+                    <div class="admin-section-header">
+                        <h3>Segnalazioni</h3>
+                        <div class="admin-section-actions">
+                            <select id="admin-reports-filter">
+                                <option value="">Tutte</option>
+                                <option value="open" selected>Aperte</option>
+                                <option value="reviewing">In revisione</option>
+                                <option value="resolved">Risolte</option>
+                                <option value="dismissed">Archiviate</option>
+                            </select>
+                            <button id="admin-reports-refresh" class="btn btn-outline btn-small">
+                                <i class="fas fa-sync-alt"></i> Aggiorna
+                            </button>
+                        </div>
+                    </div>
+                    <div id="admin-reports-list" class="admin-list">
+                        <div class="loading">Caricamento segnalazioni...</div>
+                    </div>
+                </div>
+
+                <!-- Users -->
+                <div class="admin-tab-pane" id="admin-tab-users">
+                    <div class="admin-section-header">
+                        <h3>Utenti e ruoli</h3>
+                        <div class="admin-section-actions">
+                            <input type="text" id="admin-users-search" placeholder="Cerca per nome/email/username">
+                            <button id="admin-users-refresh" class="btn btn-outline btn-small">
+                                <i class="fas fa-sync-alt"></i> Aggiorna
+                            </button>
+                        </div>
+                    </div>
+                    <div id="admin-users-list" class="admin-list">
+                        <div class="loading">Caricamento utenti...</div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="admin-tab-pane" id="admin-tab-content">
+                    <div class="admin-section-header">
+                        <h3>Contenuti pubblicati</h3>
+                        <p class="hint-text">Elimina contenuti di qualsiasi utente. L'azione e' tracciata nell'audit log.</p>
+                        <div class="admin-section-actions">
+                            <button id="admin-content-refresh" class="btn btn-outline btn-small">
+                                <i class="fas fa-sync-alt"></i> Aggiorna
+                            </button>
+                        </div>
+                    </div>
+                    <div class="admin-subtabs">
+                        <button class="admin-subtab-btn active" data-content-type="job">
+                            <i class="fas fa-tools"></i> Lavoretti
+                        </button>
+                        <button class="admin-subtab-btn" data-content-type="item">
+                            <i class="fas fa-gift"></i> Scambio / Regalo
+                        </button>
+                        <button class="admin-subtab-btn" data-content-type="event">
+                            <i class="fas fa-calendar-alt"></i> Eventi
+                        </button>
+                    </div>
+                    <div id="admin-content-list" class="admin-list">
+                        <div class="loading">Caricamento...</div>
+                    </div>
+                </div>
+
+                <!-- Audit -->
+                <div class="admin-tab-pane" id="admin-tab-audit">
+                    <div class="admin-section-header">
+                        <h3>Audit log</h3>
+                        <div class="admin-section-actions">
+                            <button id="admin-audit-refresh" class="btn btn-outline btn-small">
+                                <i class="fas fa-sync-alt"></i> Aggiorna
+                            </button>
+                            <button id="admin-audit-clear-old" class="btn btn-outline btn-small">
+                                <i class="fas fa-broom"></i> Elimina &gt; 30 giorni
+                            </button>
+                            <button id="admin-audit-clear-all" class="btn btn-outline btn-small danger-btn">
+                                <i class="fas fa-trash"></i> Elimina tutto
+                            </button>
+                        </div>
+                    </div>
+                    <div id="admin-audit-list" class="admin-list">
+                        <div class="loading">Caricamento log...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>VicinatoVicino - Piattaforma di quartiere</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js?v=2"></script>
+    <script src="js/siteSettings.js?v=2"></script>
+    <script src="js/auth.js?v=2"></script>
+    <script src="js/chat.js?v=2"></script>
+    <script src="js/reviews.js?v=2"></script>
+    <script src="js/users.js?v=4"></script>
+    <script src="js/items.js?v=4"></script>
+    <script src="js/events.js?v=1"></script>
+    <script src="js/admin.js?v=6"></script>
+    <script src="js/app.js?v=6"></script>
+</body>
+</html>

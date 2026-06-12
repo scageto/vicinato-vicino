@@ -1,0 +1,53 @@
+# =====================================================================
+# VicinatoVicino — configurazione di quartiere.
+#
+# Questi valori vengono letti SOLO al primo avvio per popolare la
+# tabella `site_settings` del database. Una volta lanciata l'app la
+# prima volta, le modifiche qui dentro NON hanno piu' effetto:
+# usa il pannello admin del sito per cambiarli.
+#
+# Per fare un fork e deployare in un altro quartiere, basta modificare
+# questo file (e .env per i segreti) prima del primo `uvicorn`.
+# =====================================================================
+
+site:
+  name: "VicinatoVicino"
+  description: "Il mio quartiere"
+  welcome_message: "La piattaforma per connettere i vicini di casa"
+  logo_url: ""           # URL pubblico o path /uploads/...
+  favicon_url: ""
+  primary_color: "#3498db"
+  contact_email: ""
+  locale: "it"
+
+# Zone selezionabili nei form (registrazione, lavoretti, eventi, ...).
+# La prima della lista e' anche il default suggerito.
+# Adatta queste voci ai nomi reali del tuo quartiere.
+zones:
+  - "Centro"
+  - "Nord"
+  - "Sud"
+  - "Est"
+  - "Ovest"
+
+# Categorie per i lavoretti
+job_categories:
+  - "giardinaggio"
+  - "idraulica"
+  - "elettricista"
+  - "traslochi"
+  - "pulizie"
+  - "babysitting"
+  - "anziani"
+  - "ripetizioni"
+  - "altro"
+
+# Categorie per gli eventi
+event_categories:
+  - "festa"
+  - "mercatino"
+  - "corso"
+  - "pulizia"
+  - "sport"
+  - "cultura"
+  - "altro"

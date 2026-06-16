@@ -94,23 +94,31 @@ processo Python + un DB file + nginx davanti.
 - Anche Debian 12 (Bookworm) e Ubuntu 22.04+ dovrebbero funzionare con
   minime variazioni sui nomi pacchetti.
 
-**Versioni di riferimento del setup live:**
+**Versioni di riferimento:**
 
-- Python 3.11.9
+- Python **3.11+** (testato su 3.11 e 3.13)
 - nginx 1.26.3
 - SQLite 3.46.1
 - FastAPI 0.135.3 (vedi `backend/requirements.txt` per il pin completo)
+
+> ℹ️ **Python**: il progetto è testato su Python 3.11 e 3.13. Usa il
+> `python3` di default della tua distribuzione purché sia ≥ 3.11 — non
+> serve installare una versione specifica. Su Raspberry Pi OS, `pip`
+> attinge automaticamente da [piwheels](https://www.piwheels.org/) per
+> i wheel ARM precompilati; se per una libreria il wheel non è
+> disponibile, pip la compila al volo (da qui i pacchetti `-dev` qui
+> sotto).
 
 **Pacchetti di sistema:**
 
 ```bash
 sudo apt update
 sudo apt install -y \
-    python3.11 python3.11-venv python3.11-dev python3-pip \
+    python3 python3-venv python3-dev python3-pip \
     nginx \
     sqlite3 \
     build-essential pkg-config \
-    libffi-dev libssl-dev \
+    libffi-dev libssl-dev libyaml-dev \
     libjpeg-dev zlib1g-dev libpng-dev libwebp-dev libtiff-dev \
     libfreetype6-dev liblcms2-dev libopenjp2-7-dev \
     git curl ca-certificates
@@ -118,10 +126,12 @@ sudo apt install -y \
 
 Note sui pacchetti:
 
-- `python3.11-dev` + `build-essential` + `libffi-dev` + `libssl-dev`:
+- `python3-dev` + `build-essential` + `libffi-dev` + `libssl-dev`:
   servono per compilare estensioni native di `bcrypt`, `cryptography`,
-  `cffi`. Su ARM i wheel precompilati non sempre sono disponibili e
-  pip ricade sulla compilazione locale.
+  `cffi` quando pip non trova un wheel precompilato.
+- `libyaml-dev`: permette a PyYAML di usare il parser C (più veloce).
+  PyYAML funziona anche senza, ma installarlo evita warning e migliora
+  le prestazioni al boot.
 - `libjpeg-dev`, `libpng-dev`, `libwebp-dev`, `libtiff-dev`,
   `libfreetype6-dev`, `liblcms2-dev`, `libopenjp2-7-dev`, `zlib1g-dev`:
   richiesti da Pillow per supportare i vari formati immagine usati per
@@ -147,11 +157,16 @@ cd vicinato-vicino
 ### 2. Crea il virtualenv e installa le dipendenze Python
 
 ```bash
-python3.11 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r backend/requirements.txt
 ```
+
+> ⚠️ **Crea il venv direttamente sul server**, non copiarlo via SFTP/FTP
+> da un'altra macchina: il trasferimento perde i permessi di esecuzione e
+> i symlink dell'interprete, lasciandoti un venv non funzionante. Se sposti
+> il progetto, ricrea sempre il venv con `python3 -m venv venv`.
 
 ### 3. Configura i segreti (`.env`)
 
@@ -167,7 +182,7 @@ nano .env
 Editare anche `CORS_ORIGINS` se il frontend è servito da un dominio
 diverso dal backend.
 
-### 4. Personalizza il quartiere (`config.yaml`)
+### 4. Personalizza il quartiere (`config.yaml`) — opzionale
 
 ```bash
 cp config.yaml.example config.yaml
@@ -176,6 +191,10 @@ nano config.yaml
 
 Modifica `site.name`, `site.description`, `zones`, `job_categories`,
 `event_categories` per riflettere il tuo quartiere.
+
+> ℹ️ Questo passaggio è **opzionale**: se `config.yaml` manca, l'app parte
+> comunque con i valori di default. Conviene però crearlo per avere subito
+> il nome e le zone giuste al primo avvio.
 
 > ⚠️ Le voci in `config.yaml` vengono lette **solo al primo avvio**.
 > Dopo, le modifiche si fanno dal pannello admin (sezione "Impostazioni
@@ -188,6 +207,11 @@ cd /home/<user>/vicinato-vicino/backend
 source ../venv/bin/activate
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
+
+> ⚠️ Avvia **sempre dalla cartella `backend/`**. Gli import del codice
+> sono assoluti rispetto a `backend/` (es. `from app.config import ...`):
+> lanciare `uvicorn` dalla root del progetto produce
+> `ModuleNotFoundError: No module named 'app'`.
 
 Al primo avvio uvicorn:
 
@@ -248,7 +272,7 @@ Type=simple
 User=<user>
 WorkingDirectory=/home/<user>/vicinato-vicino/backend
 Environment="PATH=/home/<user>/vicinato-vicino/venv/bin"
-ExecStart=/home/<user>/vicinato-vicino/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+ExecStart=/home/<user>/vicinato-vicino/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000
 Restart=on-failure
 RestartSec=5
 
@@ -266,6 +290,13 @@ sudo systemctl status vicinato-vicino
 
 Nginx farà reverse proxy verso `127.0.0.1:8000` (vedi
 `deploy/nginx.conf.example`).
+
+> 💡 L'`ExecStart` usa `python -m uvicorn` anziché il wrapper
+> `venv/bin/uvicorn`: così il servizio dipende solo dall'interprete del
+> venv ed è immune a wrapper senza permesso di esecuzione (capita con venv
+> copiati invece che ricreati). Se `systemctl status` mostra
+> `status=203/EXEC`, quasi sempre il venv è stato copiato anziché creato
+> sul server: ricrealo con `python3 -m venv venv` (vedi passo 2).
 
 ## HTTPS in produzione
 

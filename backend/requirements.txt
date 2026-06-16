@@ -1,6 +1,7 @@
 # Dipendenze Python pinned alle versioni effettivamente testate
-# (output di `pip freeze` da un setup di riferimento Debian 13 trixie,
-# Python 3.11.9, su Raspberry Pi 4).
+# (output di `pip freeze` da un setup di riferimento Debian 13 trixie su
+# Raspberry Pi). Testato su Python 3.11 e 3.13: su Raspberry Pi OS pip
+# attinge i wheel ARM da piwheels.org.
 #
 # Per aggiornare le versioni: dopo aver verificato compatibilita',
 # lanciare `pip install -U <pacchetti>` e rigenerare questo file con

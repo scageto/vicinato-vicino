@@ -257,6 +257,24 @@ sudo systemctl reload nginx
 Il file ha già una sezione "PRODUCTION HARDENING" in fondo con le note
 per HTTPS e CORS in ambienti pubblici.
 
+> ⚠️ **Permessi (403 Forbidden)**: nginx gira come utente `www-data` e, per
+> servire i file da dentro una home, deve poter attraversare ogni cartella
+> del percorso. Su Raspberry Pi OS la home è tipicamente `700`/`750`, quindi
+> senza questi permessi ottieni un **403**. Sistema così:
+
+```bash
+# 1) Rendi ATTRAVERSABILI le cartelle dal home fino al progetto (solo +x, non +r:
+#    www-data può passare ma non elencare il contenuto della tua home)
+sudo chmod o+x /home/<user>
+sudo chmod o+x /home/<user>/vicinato-vicino
+
+# 2) Rendi LEGGIBILI i file statici del frontend (file: r, cartelle: rx)
+sudo chmod -R o+rX /home/<user>/vicinato-vicino/frontend
+
+# 3) Ricarica nginx
+sudo nginx -t && sudo systemctl reload nginx
+```
+
 ## Avvio come servizio (systemd)
 
 Per non dover ri-lanciare `uvicorn` ad ogni reboot, crea un'unit file:

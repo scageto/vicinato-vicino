@@ -1,0 +1,425 @@
+/* =====================================================================
+   VicinatoVicino — Restyling mobile + Modalità app
+   ---------------------------------------------------------------------
+   Caricare SEMPRE dopo css/style.css:
+
+     <link rel="stylesheet" href="css/style.css?v=5">
+     <link rel="stylesheet" href="css/mobile-app.css?v=1">
+
+   Due livelli indipendenti:
+     1) Miglioramenti mobile per il browser   ->  @media (max-width: 768px)
+     2) Modalità app (aspetto nativo)         ->  .app-mode  (classe su <body>)
+
+   REGOLA D'ORO: fuori da .app-mode e sopra i 768px il sito desktop
+   attuale NON deve cambiare. Tutto ciò che segue è confinato dentro
+   una media-query mobile oppure dentro il selettore .app-mode.
+
+   Palette rispettata: primario #3498db, scuro #2980b9, testo #2c3e50,
+   testo secondario #7f8c8d, superfici chiare. Solo tema chiaro.
+   ===================================================================== */
+
+:root {
+    /* Token per l'esperienza mobile/app, derivati dalla palette esistente */
+    --vv-primary:      var(--primary-color, #3498db);
+    --vv-primary-dark: var(--primary-color-dark, #2980b9);
+    --vv-primary-soft: var(--primary-color-soft, rgba(52, 152, 219, 0.15));
+    --vv-ink:          #2c3e50;
+    --vv-ink-soft:     #7f8c8d;
+    --vv-surface:      #ffffff;
+    --vv-bg:           #f2f5f9;
+    --vv-line:         #e6eaef;
+    --vv-radius:       16px;
+    --vv-radius-sm:    12px;
+    --vv-shadow:       0 1px 3px rgba(44, 62, 80, 0.08), 0 6px 18px rgba(44, 62, 80, 0.05);
+
+    /* Barre della modalità app + safe-area (notch / gesture bar) */
+    --vv-topbar-h:     52px;
+    --vv-bottomnav-h:  60px;
+    --vv-safe-top:     env(safe-area-inset-top, 0px);
+    --vv-safe-bottom:  env(safe-area-inset-bottom, 0px);
+}
+
+
+/* =====================================================================
+   1) MIGLIORAMENTI MOBILE  (browser, <= 768px)
+   Non introduce la "modalità app": migliora soltanto l'usabilità del
+   sito così com'è per chi visita da smartphone.
+   ===================================================================== */
+@media (max-width: 768px) {
+
+    body { font-size: 16px; }
+
+    .main-content { padding: 1rem 0 2rem; }
+
+    /* Header resta ma diventa sticky e compatto: sempre a portata di pollice */
+    .header {
+        padding: 0.7rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 500;
+    }
+
+    /* --- Target touch minimi 44px su tutti gli elementi interattivi --- */
+    .btn {
+        min-height: 44px;
+        padding: 0.65rem 1.25rem;
+        font-size: 1rem;
+    }
+    .btn-small { min-height: 40px; }
+    .nav-link {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* --- Hero / home più arioso --- */
+    .hero {
+        padding: 1.6rem 1.25rem;
+        border-radius: var(--vv-radius);
+        margin-bottom: 1.5rem;
+    }
+    .hero h2 { font-size: 1.7rem; line-height: 1.25; }
+    .hero-text { font-size: 1.05rem; }
+    .features { gap: 0.85rem; }
+    .feature, .feature-link { min-width: 0; padding: 1.25rem; }
+
+    /* --- Contenitori principali: angoli morbidi, spaziatura generosa --- */
+    .jobs-container,
+    .users-container,
+    .form-container,
+    .profile-container,
+    .admin-container {
+        padding: 1.25rem;
+        border-radius: var(--vv-radius);
+    }
+
+    /* --- Form comodi da usare con una mano ---
+       font >= 16px evita lo zoom automatico di iOS sul focus */
+    input, select, textarea {
+        font-size: 16px;
+        padding: 0.85rem 0.9rem;
+        border-radius: 10px;
+        min-height: 48px;
+    }
+    textarea { min-height: 96px; }
+    label { font-size: 0.95rem; }
+    .form-group { margin-bottom: 1.15rem; }
+
+    /* Pulsanti d'azione a tutta larghezza, grandi */
+    .form-actions { gap: 0.6rem; }
+    .form-actions .btn {
+        width: 100%;
+        min-width: 0;
+        min-height: 50px;
+        font-size: 1.05rem;
+    }
+
+    /* Toggle "crea annuncio / evento" a tutta larghezza */
+    .jobs-form-toggle-wrapper .btn { width: 100%; justify-content: center; }
+
+    /* --- Ricerca e filtri --- */
+    .search-box { width: 100%; }
+    .search-box input { min-height: 48px; }
+    .search-box .btn { min-height: 48px; }
+    .jobs-filters select { min-height: 48px; width: 100%; min-width: 0; }
+    .jobs-filters .btn { width: 100%; }
+
+    /* --- Card lavoretti / utenti / oggetti: più respiro --- */
+    .job-card,
+    .user-card {
+        padding: 1.1rem;
+        border-radius: var(--vv-radius-sm);
+        gap: 1rem;
+    }
+    .job-actions .btn { min-height: 44px; }
+
+    /* --- Chat a tutto schermo su mobile (non più pannello da 400px) --- */
+    .chat-overlay,
+    .chat-list-sidebar { width: 100%; }
+}
+
+
+/* =====================================================================
+   2) MODALITÀ APP  (.app-mode su <body>)
+   Aspetto da app nativa: header/nav del sito nascosti, bottom navigation
+   fissa, top-bar compatta, card "a scheda" su sfondo chiaro piatto.
+   Si attiva SOLO con la classe: fuori da .app-mode nulla di tutto questo
+   viene mostrato (le barre nuove restano display:none di default).
+   ===================================================================== */
+
+/* Sfondo piatto chiaro: via il gradiente "web" */
+body.app-mode {
+    background: var(--vv-bg);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Nasconde header e footer del sito: sostituiti da top-bar + bottom-nav */
+.app-mode .header,
+.app-mode .footer {
+    display: none !important;
+}
+
+/* Elementi visibili SOLO in modalità app (es. il logout nella pagina profilo,
+   dato che l'header col suo logout è nascosto). */
+.app-only { display: none; }
+.app-mode .app-only { display: inline-flex; }
+
+/* ---------------------------------------------------------------------
+   Top-bar compatta (opzionale ma consigliata per il feel nativo)
+   Markup: vedi snippet. Fuori da .app-mode è nascosta.
+   --------------------------------------------------------------------- */
+.app-top-bar { display: none; }
+
+.app-mode .app-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--vv-topbar-h) + var(--vv-safe-top));
+    padding-top: var(--vv-safe-top);
+    background: var(--vv-surface);
+    border-bottom: 1px solid var(--vv-line);
+    color: var(--vv-ink);
+    z-index: 900;
+}
+.app-top-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--vv-ink);
+    margin: 0;
+}
+.app-top-action {
+    position: absolute;
+    top: 50%;
+    right: 0.35rem;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--vv-ink);
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 50%;
+}
+.app-top-action:active { background: var(--vv-primary-soft); }
+
+/* ---------------------------------------------------------------------
+   Bottom navigation fissa — 5 voci (Home, Lavoretti, Scambio, Eventi, Chat)
+   --------------------------------------------------------------------- */
+.app-bottom-nav { display: none; }
+
+.app-mode .app-bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: calc(var(--vv-bottomnav-h) + var(--vv-safe-bottom));
+    padding-bottom: var(--vv-safe-bottom);
+    background: var(--vv-surface);
+    border-top: 1px solid var(--vv-line);
+    box-shadow: 0 -2px 14px rgba(44, 62, 80, 0.07);
+    z-index: 950;
+}
+
+.app-nav-item {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 44px;
+    padding: 0.35rem 0.15rem;
+    text-decoration: none;
+    color: var(--vv-ink-soft);
+    font-size: 0.68rem;
+    font-weight: 500;
+    line-height: 1;
+    position: relative;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.app-nav-item i { font-size: 1.3rem; }
+.app-nav-item span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Voce attiva: usa il primario del brand. Funziona sia con la classe
+   .active gestita dal JS del sito (che agisce sui .nav-link) sia
+   manualmente. */
+.app-mode .app-nav-item.active,
+.app-mode .app-nav-item.nav-link.active {
+    color: var(--vv-primary);
+}
+.app-nav-item.active i { transform: translateY(-1px); }
+.app-nav-item:active { color: var(--vv-primary-dark); }
+
+/* Pallino/badge notifiche (riusa la logica del badge chat esistente) */
+.app-nav-badge {
+    position: absolute;
+    top: 4px;
+    left: calc(50% + 8px);
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------
+   Contenuto: lascia spazio a top-bar (sopra) e bottom-nav (sotto)
+   --------------------------------------------------------------------- */
+.app-mode .main-content {
+    padding-top: calc(var(--vv-topbar-h) + var(--vv-safe-top) + 0.75rem);
+    padding-bottom: calc(var(--vv-bottomnav-h) + var(--vv-safe-bottom) + 1.25rem);
+}
+.app-mode .container { padding-left: 1rem; padding-right: 1rem; }
+
+/* Se NON usi la top-bar, elimina lo spazio in alto aggiungendo la classe
+   .no-app-top-bar al <body> insieme a .app-mode */
+.app-mode.no-app-top-bar .main-content {
+    padding-top: calc(var(--vv-safe-top) + 0.75rem);
+}
+
+/* ---------------------------------------------------------------------
+   Contenitori "a pagina": lo sfondo lo dà il body, i riquadri bianchi
+   sono le singole card. I contenitori perdono la loro scatola.
+   --------------------------------------------------------------------- */
+.app-mode .jobs-container,
+.app-mode .users-container,
+.app-mode .admin-container {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    max-width: 640px;
+}
+.app-mode .jobs-container > h2,
+.app-mode .users-container > h2,
+.app-mode .admin-container > h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Form (registrazione, login, profilo): restano una scheda bianca,
+   comoda e centrata, ma appiattita nello stile app */
+.app-mode .form-container,
+.app-mode .profile-container {
+    max-width: 640px;
+    border-radius: var(--vv-radius);
+    box-shadow: var(--vv-shadow);
+    padding: 1.5rem 1.25rem;
+}
+
+/* Blocco filtri/ricerca come "scheda" chiara */
+.app-mode .jobs-controls {
+    background: var(--vv-surface);
+    border-radius: var(--vv-radius);
+    box-shadow: var(--vv-shadow);
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+}
+.app-mode .search-box input {
+    border-radius: 999px;
+    background: var(--vv-bg);
+    border-color: transparent;
+}
+.app-mode .search-box input:focus {
+    background: var(--vv-surface);
+    border-color: var(--vv-primary);
+}
+
+/* Card lavoretti / oggetti / utenti / recensioni: scheda nativa */
+.app-mode .job-card,
+.app-mode .user-card,
+.app-mode .review-card {
+    background: var(--vv-surface);
+    border-radius: var(--vv-radius);
+    box-shadow: var(--vv-shadow);
+    padding: 1.15rem;
+    margin-bottom: 0.9rem;
+}
+
+/* Il form "crea annuncio/evento" a scheda bianca piena */
+.app-mode .jobs-form-wrapper {
+    background: var(--vv-surface);
+    border-radius: var(--vv-radius);
+    box-shadow: var(--vv-shadow);
+}
+
+/* ---------------------------------------------------------------------
+   Bottoni in stile app: pieni, arrotondati, alti (>=46px)
+   --------------------------------------------------------------------- */
+.app-mode .btn {
+    min-height: 46px;
+    border-radius: 12px;
+    font-size: 1rem;
+    box-shadow: none;
+}
+.app-mode .btn-primary { box-shadow: 0 3px 10px rgba(52, 152, 219, 0.28); }
+.app-mode .btn-primary:hover { transform: none; }
+.app-mode .btn-small { min-height: 40px; }
+
+/* Azioni principali dei form a tutta larghezza */
+.app-mode .form-actions .btn,
+.app-mode .jobs-form-toggle-wrapper .btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    min-height: 50px;
+}
+
+/* Campi form ancora più comodi in app */
+.app-mode input,
+.app-mode select,
+.app-mode textarea {
+    font-size: 16px;
+    min-height: 50px;
+    border-radius: 12px;
+    background: var(--vv-bg);
+    border-color: var(--vv-line);
+}
+.app-mode input:focus,
+.app-mode select:focus,
+.app-mode textarea:focus {
+    background: var(--vv-surface);
+    border-color: var(--vv-primary);
+}
+.app-mode textarea { min-height: 110px; }
+
+/* ---------------------------------------------------------------------
+   Chat / lista chat: pannelli a tutto schermo (con safe-area)
+   --------------------------------------------------------------------- */
+.app-mode .chat-overlay,
+.app-mode .chat-list-sidebar {
+    width: 100%;
+    padding-top: var(--vv-safe-top);
+    padding-bottom: var(--vv-safe-bottom);
+}
+
+/* La lightbox immagini resta sopra a tutto: nessuna modifica necessaria. */
+
+
+/* =====================================================================
+   MODALITÀ APP su schermi larghi (tablet / WebView orizzontale):
+   centriamo i contenuti e la bottom-nav per non "spalmare" tutto.
+   ===================================================================== */
+@media (min-width: 700px) {
+    .app-mode .main-content > .container { max-width: 720px; }
+    .app-mode .app-bottom-nav .app-nav-item { font-size: 0.72rem; }
+}

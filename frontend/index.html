@@ -2,9 +2,10 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>VicinatoVicino - Il mio quartiere</title>
     <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/mobile-app.css?v=1">
     <!-- Preconnect a CDN per ridurre TTFB su font/icone -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
@@ -22,6 +23,15 @@
           referrerpolicy="no-referrer">
 </head>
 <body>
+    <script>
+        // Modalità app: attivata quando la pagina gira dentro il wrapper
+        // Android (che aggiunge "VicinatoVicinoApp" allo User-Agent).
+        // Nel browser normale questa classe non viene mai aggiunta.
+        if (navigator.userAgent.indexOf('VicinatoVicinoApp') !== -1) {
+            document.body.classList.add('app-mode');
+        }
+    </script>
+
     <!-- Header -->
     <header class="header">
         <div class="container">
@@ -789,6 +799,10 @@
                     <button id="toggle-delete-account" class="btn btn-outline danger-btn">
                         <i class="fas fa-trash-alt"></i> Elimina account
                     </button>
+                    <!-- Logout: in modalità app l'header (col suo logout) è nascosto -->
+                    <button id="app-logout-btn" class="btn btn-outline app-only">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 </div>
 
                 <!-- Modifica profilo -->
@@ -1122,6 +1136,43 @@
         </div>
     </footer>
 
+    <!-- =====================================================================
+         Modalità app: top-bar + bottom navigation.
+         Invisibili nel sito normale, compaiono solo con <body class="app-mode">.
+         Le voci Home/Lavoretti/Scambio/Eventi riusano .nav-link + data-page,
+         quindi il routing del sito le gestisce senza JS aggiuntivo.
+         ===================================================================== -->
+    <header class="app-top-bar">
+        <span class="app-top-title">VicinatoVicino</span>
+        <button type="button" class="app-top-action" id="app-top-profile" aria-label="Account">
+            <i class="fas fa-user-circle"></i>
+        </button>
+    </header>
+
+    <nav class="app-bottom-nav" aria-label="Navigazione principale">
+        <a href="#" class="app-nav-item nav-link" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#" class="app-nav-item nav-link" data-page="jobs">
+            <i class="fas fa-tools"></i>
+            <span>Lavoretti</span>
+        </a>
+        <a href="#" class="app-nav-item nav-link" data-page="items">
+            <i class="fas fa-gift"></i>
+            <span>Scambio</span>
+        </a>
+        <a href="#" class="app-nav-item nav-link" data-page="events">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Eventi</span>
+        </a>
+        <a href="#" class="app-nav-item" id="app-nav-chat" role="button">
+            <i class="fas fa-comments"></i>
+            <span>Chat</span>
+            <span class="app-nav-badge" id="app-nav-chat-badge" style="display:none;">0</span>
+        </a>
+    </nav>
+
     <script src="js/config.js?v=2"></script>
     <script src="js/siteSettings.js?v=2"></script>
     <script src="js/auth.js?v=2"></script>
@@ -1132,5 +1183,29 @@
     <script src="js/events.js?v=1"></script>
     <script src="js/admin.js?v=6"></script>
     <script src="js/app.js?v=6"></script>
+
+    <!-- Wiring della modalità app: eseguito solo quando .app-mode è attiva -->
+    <script>
+        (function () {
+            if (!document.body.classList.contains('app-mode')) return;
+
+            // Voce "Chat" della bottom-nav -> apre la chat già esistente del sito
+            document.getElementById('app-nav-chat')?.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.getElementById('chat-toggle-btn')?.click();
+            });
+
+            // Icona account (top-bar) -> Profilo se loggato, altrimenti Login
+            document.getElementById('app-top-profile')?.addEventListener('click', function () {
+                var logged = window.APP_STATE && APP_STATE.isLoggedIn;
+                document.querySelector('.nav-link[data-page="' + (logged ? 'profile' : 'login') + '"]')?.click();
+            });
+
+            // Logout (pulsante mostrato solo in app-mode nella pagina profilo)
+            document.getElementById('app-logout-btn')?.addEventListener('click', function () {
+                document.getElementById('logout-btn')?.click();
+            });
+        })();
+    </script>
 </body>
 </html>

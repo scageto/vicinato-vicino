@@ -45,7 +45,9 @@ function setActivePage(targetPage, opts = {}) {
     pages.forEach(p => p.classList.remove("active"));
     document.getElementById(`${targetPage}-page`)?.classList.add("active");
     navLinks.forEach(l => l.classList.remove("active"));
-    document.querySelector(`.nav-link[data-page="${targetPage}"]`)?.classList.add("active");
+    // querySelectorAll (non querySelector): così si evidenziano sia il link
+    // dell'header sia quello della bottom-nav in modalità app.
+    document.querySelectorAll(`.nav-link[data-page="${targetPage}"]`).forEach(l => l.classList.add("active"));
 
     if (targetPage === "profile" && APP_STATE.isLoggedIn) {
         loadUserProfile();

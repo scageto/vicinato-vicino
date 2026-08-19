@@ -24,6 +24,7 @@
 - [Avvio come servizio (systemd)](#avvio-come-servizio-systemd)
 - [HTTPS in produzione](#https-in-produzione)
 - [Manutenzione](#manutenzione)
+- [App](#App)
 - [Sicurezza](#sicurezza)
 - [Contribuire](#contribuire)
 - [Licenza](#licenza)
@@ -360,6 +361,11 @@ sudo systemctl restart vicinato-vicino
 Se avvii via systemd: `sudo journalctl -u vicinato-vicino -f`.
 
 Se avvii a mano: i log finiscono su stdout.
+
+### App
+Nel repository si trova file chiamato app-release.apk. 
+Se installato su dispositivi android al primo avvio chiede il link dell'istanza e 
+da quel momento si ha un app configurata che punta direttamente al server.
 
 ## Sicurezza
 
